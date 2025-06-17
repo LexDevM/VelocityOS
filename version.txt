@@ -1,6 +1,6 @@
 # UTF-8
 VSVersionInfo(
-  ffi=FixedFileInfo(  # <-- CORRECCIÓN: VSFixedFileInfo -> FixedFileInfo
+  ffi=FixedFileInfo( 
     # filevers y prodvers deben ser una tupla de cuatro números.
     filevers=(1, 0, 0, 0),
     prodvers=(1, 0, 0, 0),
