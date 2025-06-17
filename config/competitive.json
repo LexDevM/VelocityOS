@@ -1,0 +1,21 @@
+{
+    "id": "competitive",
+    "name": "Competitivo",
+    "description": "Máximo FPS y mínima latencia. Desactiva funciones visuales y servicios no esenciales. Ideal para e-sports como Valorant, CS:GO, etc.",
+    "optimizations": {
+        "power_plan": true,
+        "services": {
+            "enabled": true,
+            "list": ["SysMain", "DiagTrack", "Spooler", "XboxGipSvc", "dmwappushservice"]
+        },
+        "gaming_features": {
+            "enabled": true
+        },
+        "nagle_algorithm": {
+            "enabled": true
+        },
+        "temp_files": {
+            "enabled": true
+        }
+    }
+}

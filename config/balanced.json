@@ -1,0 +1,23 @@
+{
+    "id": "balanced",
+    "name": "Equilibrado",
+    "description": "Un buen equilibrio entre rendimiento y funcionalidad. Mantiene características útiles como la Game Bar para capturas. Ideal para juegos AAA y uso general.",
+    "optimizations": {
+        "power_plan": true,
+        "services": {
+            "enabled": true,
+            "list": [
+                "DiagTrack"
+            ]
+        },
+        "gaming_features": {
+            "enabled": false
+        },
+        "nagle_algorithm": {
+            "enabled": true
+        },
+        "temp_files": {
+            "enabled": true
+        }
+    }
+}

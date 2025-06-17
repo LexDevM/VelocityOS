@@ -1,0 +1,125 @@
+/* assets/styles/main.qss */
+
+/* --- Configuración Global --- */
+* {
+    color: #cdd6f4; /* Texto principal */
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 11pt;
+}
+
+QMainWindow, QWidget {
+    background-color: #1e1e2f; /* Fondo principal */
+}
+
+/* --- Pestañas (Tabs) --- */
+QTabWidget::pane {
+    border: none;
+}
+
+QTabBar::tab {
+    background-color: #27293d; /* Fondo de pestaña inactiva */
+    color: #a6adc8; /* Texto de pestaña inactiva */
+    padding: 10px 20px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-weight: bold;
+    min-width: 150px;
+}
+
+QTabBar::tab:hover {
+    background-color: #3b3e58;
+}
+
+QTabBar::tab:selected {
+    background-color: #89b4fa; /* Fondo de pestaña activa (acento) */
+    color: #1e1e2f; /* Texto de pestaña activa (oscuro) */
+}
+
+/* --- Contenedores tipo "Tarjeta" --- */
+QGroupBox {
+    background-color: #27293d;
+    border-radius: 8px;
+    border: 1px solid #3b3e58;
+    margin-top: 10px;
+    padding: 10px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 10px;
+    color: #a6adc8;
+    font-weight: bold;
+}
+
+/* --- Botones --- */
+QPushButton {
+    background-color: #3b3e58;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #4b4e68;
+}
+
+QPushButton:pressed {
+    background-color: #27293d;
+}
+
+/* Botones de Perfil (Checkables) */
+QPushButton:checked {
+    background-color: #89b4fa;
+    color: #1e1e2f;
+}
+
+/* Botón de Optimizar (Principal) */
+#OptimizeButton {
+    background-color: #a6e3a1; /* Verde menta para la acción principal */
+    color: #1e1e2f;
+}
+
+#OptimizeButton:hover {
+    background-color: #b9edb4;
+}
+
+#OptimizeButton:disabled {
+    background-color: #4f4f4f;
+    color: #888888;
+}
+
+/* --- Etiquetas (Labels) --- */
+#TitleLabel {
+    font-size: 18pt;
+    font-weight: bold;
+    padding: 10px;
+}
+
+#DescriptionLabel {
+    color: #a6adc8;
+    font-size: 10pt;
+}
+
+/* --- Consola y Monitores --- */
+QTextEdit {
+    background-color: #161621;
+    border: 1px solid #3b3e58;
+    border-radius: 6px;
+    font-family: "Consolas", "Courier New", monospace;
+}
+
+QProgressBar {
+    border: 1px solid #3b3e58;
+    border-radius: 6px;
+    text-align: center;
+    color: #cdd6f4;
+    font-weight: bold;
+    height: 24px;
+}
+
+QProgressBar::chunk {
+    background-color: #89b4fa; /* Color de acento */
+    border-radius: 5px;
+}

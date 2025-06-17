@@ -1,0 +1,17 @@
+# Entornos virtuales
+.venv/
+venv/
+
+# Cachés de Python
+__pycache__/
+*.pyc
+
+# Carpetas de compilación y salida
+build/
+dist/
+Output/
+
+# Archivos de IDE y sistema
+.idea/
+.vscode/
+*.log
