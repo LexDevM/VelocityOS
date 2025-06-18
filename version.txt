@@ -2,8 +2,8 @@
 VSVersionInfo(
   ffi=FixedFileInfo(  # <-- CORRECCIÓN: VSFixedFileInfo -> FixedFileInfo
     # filevers y prodvers deben ser una tupla de cuatro números.
-    filevers=(1, 0, 0, 0),
-    prodvers=(1, 0, 0, 0),
+    filevers=(1, 0, 1, 0),
+    prodvers=(1, 0, 1, 0),
     # mask=0x3f es el valor estándar, no necesita cambio.
     mask=0x3f,
     # flags=0x0 es el valor estándar, no necesita cambio.
@@ -24,12 +24,12 @@ VSVersionInfo(
         '040a04b0', # Codificación para Español (España) - UTF-8
         [StringStruct('CompanyName', u'Álex Macías León'),
         StringStruct('FileDescription', u'VelocityOS - Optimizador de Rendimiento para Gaming'),
-        StringStruct('FileVersion', '1.0.0'),
+        StringStruct('FileVersion', '1.0.1'),
         StringStruct('InternalName', 'VelocityOS'),
         StringStruct('LegalCopyright', u'© Álex Macías León. Todos los derechos reservados.'),
         StringStruct('OriginalFilename', 'VelocityOS.exe'),
         StringStruct('ProductName', u'VelocityOS'),
-        StringStruct('ProductVersion', '1.0.0')])
+        StringStruct('ProductVersion', '1.0.1')])
       ]), 
     VarFileInfo([VarStruct('Translation', [1034, 1200])])
   ]

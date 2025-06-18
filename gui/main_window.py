@@ -9,8 +9,7 @@ from PyQt6.QtWidgets import (
     QScrollArea, QFrame, QCheckBox, QComboBox, QFormLayout
 )
 from PyQt6.QtGui import QIcon, QFont, QPixmap
-from PyQt6.QtCore import Qt, QSize
-import pyqtgraph as pg
+from PyQt6.QtCore import Qt, QSize, QTimer
 
 from core.state_manager import StateManager
 from core.system_optimizer import SystemOptimizer
@@ -27,18 +26,23 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("VelocityOS")
         self.setWindowIcon(QIcon(resource_path("assets/icons/velocityos.ico")))
-        self.setMinimumSize(800, 720) # Ajustado para la UI sin el título extra
+        self.setMinimumSize(800, 720)
 
         # --- Backend Logic Initialization ---
         app_path = sys.executable if getattr(sys, 'frozen', False) else os.path.abspath(sys.argv[0])
         self.startup_manager = startup_manager.StartupManager("VelocityOS", app_path)
         self.state_manager = StateManager()
+        
+        # El widget de la consola DEBE crearse antes de que cualquier módulo de backend lo use
+        self.console_output = QTextEdit() 
+
         self.reg_manager = RegistryManager(self.log_to_console)
         self.system_optimizer = SystemOptimizer(self.state_manager, self.log_to_console)
         self.network_optimizer = NetworkOptimizer(self.state_manager, self.reg_manager, self.log_to_console)
         self.gpu_optimizer = GpuOptimizer(self.log_to_console)
 
         # --- GUI State Variables ---
+        self.profiles = self._load_profiles()
         self.selected_profile_name = None
         self.selected_profile_id_for_settings = None
         self.gpu_brand_detected = "UNKNOWN"
@@ -49,28 +53,22 @@ class MainWindow(QMainWindow):
         self.optimization_tab = QWidget()
         self.monitor_tab = QWidget()
         self.settings_tab = QWidget()
-        
-        self.console_output = QTextEdit() 
-
-        # --- Cargar datos ---
-        self.profiles = self._load_profiles()
-        
-        # --- Configurar las pestañas ---
         self.tabs.addTab(self.optimization_tab, QIcon(resource_path("assets/icons/sliders.png")), "Optimización")
         self.tabs.addTab(self.monitor_tab, QIcon(resource_path("assets/icons/monitor.png")), "Monitor")
         self.tabs.addTab(self.settings_tab, QIcon(resource_path("assets/icons/settings.png")), "Ajustes")
         self.tabs.setIconSize(QSize(24, 24))
 
+        # --- Setup Tabs ---
         self.setup_optimization_tab()
         self.setup_monitor_tab()
         self.setup_settings_tab()
         
-        # --- Iniciar hilos ---
+        # --- Start Monitoring Thread ---
         self.monitor_thread = SystemMonitor(self)
         self.monitor_thread.system_data_updated.connect(self.update_monitor_data)
         self.monitor_thread.start()
         
-        # --- Estado inicial ---
+        # --- Initial State ---
         self.update_button_states()
         self.log_to_console("Bienvenido a VelocityOS.")
         if not self.profiles:
@@ -82,8 +80,6 @@ class MainWindow(QMainWindow):
         main_layout = QVBoxLayout(self.optimization_tab)
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
-
-        # LA SECCIÓN DEL TÍTULO/LOGO HA SIDO COMPLETAMENTE ELIMINADA DE AQUÍ
 
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -238,10 +234,17 @@ class MainWindow(QMainWindow):
         profile_settings_layout.addWidget(self.profile_selector)
         profile_settings_layout.addSpacing(10)
         profile_settings_layout.addLayout(self.profile_options_layout)
+        save_layout = QHBoxLayout()
+        self.save_feedback_label = QLabel("")
+        self.save_feedback_label.setStyleSheet("color: #a6e3a1; font-weight: bold;")
         save_button = QPushButton(QIcon(resource_path("assets/icons/save.png")), " Guardar Cambios del Perfil")
         save_button.setIconSize(QSize(20, 20))
         save_button.clicked.connect(self.save_profile_settings)
-        profile_settings_layout.addWidget(save_button, 0, Qt.AlignmentFlag.AlignRight)
+        save_layout.addStretch()
+        save_layout.addWidget(self.save_feedback_label)
+        save_layout.addSpacing(10)
+        save_layout.addWidget(save_button)
+        profile_settings_layout.addLayout(save_layout)
         profile_settings_group.setLayout(profile_settings_layout)
         layout.addWidget(app_settings_group)
         layout.addWidget(profile_settings_group)
@@ -320,7 +323,14 @@ class MainWindow(QMainWindow):
             file_path = os.path.join(config_dir, f"{profile_id}.json")
             with open(file_path, 'w', encoding='utf-8') as f: json.dump(profile_data, f, indent=4, ensure_ascii=False)
             self.log_to_console(f"[INFO] Ajustes del perfil '{profile_data['name']}' guardados.")
-        except Exception as e: self.log_to_console(f"[ERROR] No se pudo guardar el archivo del perfil: {e}")
+            self.save_feedback_label.setText("¡Guardado!")
+            self.save_feedback_label.setStyleSheet("color: #a6e3a1; font-weight: bold;")
+            QTimer.singleShot(2500, lambda: self.save_feedback_label.setText(""))
+        except Exception as e:
+            self.log_to_console(f"[ERROR] No se pudo guardar el archivo del perfil: {e}")
+            self.save_feedback_label.setText("¡Error!")
+            self.save_feedback_label.setStyleSheet("color: #f38ba8; font-weight: bold;")
+            QTimer.singleShot(2500, lambda: self.save_feedback_label.setText(""))
 
     def start_speed_test(self):
         self.speed_test_button.setEnabled(False)

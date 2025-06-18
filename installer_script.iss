@@ -4,7 +4,7 @@
 [Setup]
 ; --- Información Básica y Branding ---
 AppName=VelocityOS
-AppVersion=1.0.0
+AppVersion=1.0.1
 AppPublisher=Álex Macías León
 AppPublisherURL=https://github.com/LexDevM
 AppId={{E6A3B8D9-C5E1-4F2A-9A8B-3F1D7E9A0B1C}}
@@ -12,7 +12,7 @@ AppId={{E6A3B8D9-C5E1-4F2A-9A8B-3F1D7E9A0B1C}}
 ; --- Directorios y Nombres de Archivo ---
 DefaultDirName={autopf}\VelocityOS
 DefaultGroupName=VelocityOS
-OutputBaseFilename=VelocityOS_v1.0.0_Setup
+OutputBaseFilename=VelocityOS_v1.0.1_Setup
 SetupIconFile=assets\icons\velocityos.ico
 UninstallDisplayIcon={app}\VelocityOS.exe
 
