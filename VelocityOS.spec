@@ -1,6 +1,4 @@
 # -*- mode: python ; coding: utf-8 -*-
-
-# Definición de la variable que faltaba
 block_cipher = None
 
 a = Analysis(

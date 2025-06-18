@@ -22,7 +22,7 @@ SolidCompression=yes
 WizardStyle=modern
 
 ; ====================================================================
-; --- SECCIÓN DE PRIVILEGIOS CORREGIDA Y ROBUSTA ---
+; --- SECCIÓN DE PRIVILEGIOS ---
 ;
 ; PrivilegesRequired=admin asegura que el instalador pida elevación.
 PrivilegesRequired=admin
