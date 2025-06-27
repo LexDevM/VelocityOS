@@ -4,6 +4,7 @@
     "description": "Máximo FPS y mínima latencia. Desactiva funciones visuales y servicios no esenciales. Ideal para e-sports como Valorant, CS:GO, etc.",
     "optimizations": {
         "power_plan": true,
+        "ram_optimizer": true,
         "services": {
             "enabled": true,
             "list": ["SysMain", "DiagTrack", "Spooler", "XboxGipSvc", "dmwappushservice"]
@@ -16,6 +17,18 @@
         },
         "temp_files": {
             "enabled": true
+        },
+        "app_killer": {
+            "enabled": true,
+            "list": [
+                "Discord.exe",
+                "steam.exe",
+                "steamwebhelper.exe",
+                "EpicGamesLauncher.exe",
+                "Spotify.exe",
+                "msedge.exe",
+                "chrome.exe"
+            ]
         }
     }
 }

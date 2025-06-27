@@ -3,126 +3,120 @@
 import time
 import logging
 import psutil
-import subprocess
-import re
 
+# --- Importaciones seguras para librerías de GPU ---
 try:
     import pynvml
     PYNVML_AVAILABLE = True
 except ImportError:
     PYNVML_AVAILABLE = False
-    # No usamos print aquí; dejaremos que el logger lo maneje si se configura
-    # print("[Monitor] La librería 'pynvml' no está instalada. El monitoreo de GPU NVIDIA estará desactivado.")
+
+try:
+    from pyadl import ADLManager
+    PYADL_AVAILABLE = True
+except ImportError:
+    PYADL_AVAILABLE = False
 
 from PyQt6.QtCore import QThread, pyqtSignal
 
 class SystemMonitor(QThread):
     """
-    Un hilo de monitoreo robusto y profesional que recopila datos del sistema
-    (CPU, RAM, GPU y Red) y los emite a través de una señal de Qt.
+    Un hilo de monitoreo agnóstico a la marca de la GPU.
+    Detecta si hay una GPU NVIDIA o AMD y utiliza la librería correspondiente.
     """
-    # La señal que emitirá un diccionario con los datos del sistema.
     system_data_updated = pyqtSignal(dict)
+    gpu_detected = pyqtSignal(str) # Señal para informar a la GUI qué GPU se encontró
 
-    # Constantes para la configuración del monitor
     UPDATE_INTERVAL = 1  # segundos
-    PING_TARGET = "1.1.1.1" # Servidor de Cloudflare, una opción fiable y rápida para el ping
 
     def __init__(self, parent=None):
-        """
-        Inicializa el hilo de monitoreo.
-        Args:
-            parent (QObject, optional): El objeto padre en la jerarquía de Qt.
-        """
         super().__init__(parent)
         self.logger = logging.getLogger(self.__class__.__name__)
         self._is_running = True
-        self.gpu_handle = self._initialize_gpu()
         
-        # Inicializar contadores de red para el primer cálculo de velocidad
-        self.last_net_io = psutil.net_io_counters()
+        self.gpu_brand = "NONE"
+        self.gpu_device = None # Almacenará el 'handle' de pynvml o el 'device' de pyadl
+        
+        # La inicialización de la GPU ahora se hace en el constructor
+        # para que la señal 'gpu_detected' se emita al principio.
+        self._initialize_gpu()
 
     def _initialize_gpu(self):
         """
-        Inicializa la librería NVML de NVIDIA de forma segura.
-        Devuelve el handle de la GPU si está disponible, de lo contrario None.
+        Intenta inicializar primero NVIDIA, y si falla, intenta con AMD.
+        Emite una señal con la marca de la GPU detectada.
         """
-        if not PYNVML_AVAILABLE:
-            self.logger.warning("Librería 'pynvml' no encontrada. El monitoreo de GPU NVIDIA estará desactivado.")
-            return None
+        # 1. Intentar con NVIDIA
+        if PYNVML_AVAILABLE:
+            try:
+                pynvml.nvmlInit()
+                self.gpu_device = pynvml.nvmlDeviceGetHandleByIndex(0)
+                self.gpu_brand = "NVIDIA"
+                self.logger.info("NVML inicializado. GPU NVIDIA detectada.")
+                self.gpu_detected.emit("NVIDIA")
+                return
+            except pynvml.NVMLError:
+                self.logger.warning("No se detectó una GPU NVIDIA. Buscando AMD...")
         
-        try:
-            pynvml.nvmlInit()
-            # Asumimos que la GPU principal es el dispositivo 0.
-            handle = pynvml.nvmlDeviceGetHandleByIndex(0)
-            self.logger.info("NVML inicializado. GPU NVIDIA detectada y lista para monitoreo.")
-            return handle
-        except pynvml.NVMLError as e:
-            self.logger.warning(f"No se pudo inicializar NVML o detectar una GPU NVIDIA: {e}")
-            return None
+        # 2. Si NVIDIA falla, intentar con AMD
+        if PYADL_AVAILABLE:
+            try:
+                adl_devices = ADLManager.getInstance().getDevices()
+                if adl_devices:
+                    self.gpu_device = adl_devices[0] # Usamos la primera GPU AMD encontrada
+                    self.gpu_brand = "AMD"
+                    self.logger.info("ADL inicializado. GPU AMD detectada.")
+                    self.gpu_detected.emit("AMD")
+                    return
+            except Exception as e:
+                # La librería PyADL puede lanzar excepciones genéricas si los drivers no responden.
+                self.logger.error(f"Error al inicializar PyADL para AMD: {e}")
 
-    def _get_ping(self):
-        """Ejecuta un comando ping y parsea la latencia. Devuelve -1 si falla."""
+        # 3. Si ambos fallan
+        self.logger.warning("No se detectó una GPU NVIDIA o AMD compatible para el monitoreo.")
+        self.gpu_detected.emit("NONE")
+
+    def _get_gpu_stats(self):
+        """Devuelve una tupla (uso, temperatura) de la GPU según la marca detectada."""
+        usage, temp = 0, 0
+        if not self.gpu_device:
+            return usage, temp
+            
         try:
-            # -n 1 (Windows) / -c 1 (Linux/macOS) envía solo un paquete.
-            # -w 1000 (Windows) / -W 1 (Linux/macOS) establece un timeout de 1000ms.
-            command = ["ping", "-n", "1", "-w", "1000", self.PING_TARGET]
-            # La salida de ping puede estar en otro idioma, pero el formato "time=Xms" suele ser consistente.
-            output = subprocess.check_output(command, stderr=subprocess.STDOUT, universal_newlines=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            if self.gpu_brand == "NVIDIA":
+                utilization = pynvml.nvmlDeviceGetUtilizationRates(self.gpu_device)
+                usage = utilization.gpu
+                temp = pynvml.nvmlDeviceGetTemperature(self.gpu_device, pynvml.NVML_TEMPERATURE_GPU)
             
-            match = re.search(r"tiempo[=<](\d+)", output) # Para español: "tiempo=Xms" o "tiempo<Xms"
-            if not match:
-                match = re.search(r"time[=<](\d+)", output) # Para inglés: "time=Xms" or "time<Xms"
-            
-            if match:
-                return int(match.group(1))
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            # El ping falló (sin conexión) o el comando no se encontró
-            return -1
-        return -1
+            elif self.gpu_brand == "AMD":
+                usage = self.gpu_device.getCurrentUsage()
+                temp = self.gpu_device.getCurrentTemperature()
+
+        except Exception as e:
+            self.logger.warning(f"Error temporal al leer datos de la GPU {self.gpu_brand}: {e}")
+            # Si falla la lectura, reseteamos el dispositivo para un posible reintento futuro
+            self.gpu_device = None
+            self.gpu_brand = "NONE"
+            self.gpu_detected.emit("NONE") # Informar a la GUI del fallo
+        
+        return usage, temp
 
     def run(self):
         """
-        El bucle principal del hilo. Se ejecuta cuando se llama a .start().
-        Recopila datos y los emite a intervalos regulares.
+        El bucle principal del hilo. Recopila datos y los emite a intervalos regulares.
         """
         self.logger.info("Hilo de monitoreo iniciado.")
         while self._is_running:
-            # --- Lectura de Red ---
-            current_net_io = psutil.net_io_counters()
-            elapsed_time = self.UPDATE_INTERVAL # Asumimos que el tiempo de ejecución del código es despreciable
+            gpu_usage, gpu_temp = self._get_gpu_stats()
             
-            bytes_sent = current_net_io.bytes_sent - self.last_net_io.bytes_sent
-            bytes_recv = current_net_io.bytes_recv - self.last_net_io.bytes_recv
-            
-            upload_speed = bytes_sent / elapsed_time
-            download_speed = bytes_recv / elapsed_time
-            
-            self.last_net_io = current_net_io
-            
-            # --- Recopilación de todos los datos en un diccionario ---
             data = {
                 'cpu_usage': psutil.cpu_percent(),
                 'ram_usage': psutil.virtual_memory().percent,
-                'gpu_usage': 0,
-                'gpu_temp': 0,
-                'ping': self._get_ping(),
-                'upload_speed': upload_speed,
-                'download_speed': download_speed
+                'gpu_usage': gpu_usage,
+                'gpu_temp': gpu_temp,
             }
-
-            if self.gpu_handle:
-                try:
-                    utilization = pynvml.nvmlDeviceGetUtilizationRates(self.gpu_handle)
-                    data['gpu_usage'] = utilization.gpu
-                    data['gpu_temp'] = pynvml.nvmlDeviceGetTemperature(self.gpu_handle, pynvml.NVML_TEMPERATURE_GPU)
-                except pynvml.NVMLError as e:
-                    self.logger.warning(f"Error temporal al leer datos de la GPU: {e}")
             
-            # Emitimos la señal con los datos recolectados para que la GUI los reciba.
             self.system_data_updated.emit(data)
-            
-            # Esperamos el intervalo definido antes de la siguiente lectura.
             time.sleep(self.UPDATE_INTERVAL)
         
         self.logger.info("Bucle de monitoreo finalizado.")
@@ -133,7 +127,9 @@ class SystemMonitor(QThread):
         """
         self.logger.info("Deteniendo el hilo de monitoreo...")
         self._is_running = False
-        if PYNVML_AVAILABLE and self.gpu_handle:
+        
+        # Limpieza de recursos de la librería de NVIDIA
+        if self.gpu_brand == "NVIDIA" and PYNVML_AVAILABLE:
             try:
                 pynvml.nvmlShutdown()
                 self.logger.info("NVML cerrado correctamente.")

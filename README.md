@@ -1,7 +1,8 @@
 <div align="center">
   <img src="assets/icons/velocityos_logo.png" alt="VelocityOS Logo" width="400"/>
+  <h1>VelocityOS</h1>
   <p><strong>La suite de optimización definitiva para gamers en Windows 10 y 11.</strong></p>
-  <p>Maximiza tus FPS, minimiza tu latencia y toma el control de tu sistema con un solo clic.</p>
+  <p>Maximiza tus FPS, minimiza tu latencia y toma el control total de tu sistema.</p>
   
   <p>
     <a href="https://github.com/LexDevM/VelocityOS/releases">
@@ -23,14 +24,15 @@
 
 ## ✨ ¿Por Qué VelocityOS?
 
-| Característica                 | Descripción                                                                                                                              |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| 🚀 **Perfiles Inteligentes**     | Elige entre perfiles como **Competitivo** o **Equilibrado**. O personalízalos a tu gusto en la pestaña de Ajustes.                       |
-| ⚙️ **Optimización Profunda**     | Ajusta planes de energía, desactiva servicios, limpia archivos temporales y modifica el registro para eliminar cuellos de botella.      |
-| 🌐 **Diagnóstico de Red**        | Incluye un **test de velocidad preciso** (potenciado por Ookla®) y un monitor de latencia para diagnosticar problemas de conexión al instante. |
-| 📊 **Monitoreo en Tiempo Real**  | Mantén un ojo en el uso de tu **CPU, RAM y GPU (NVIDIA)** con un panel de monitoreo claro y conciso.                                     |
-| ⏪ **Totalmente Reversible**     | Cada cambio realizado por los perfiles de optimización se puede revertir con un solo clic, devolviendo tu sistema a su estado original. |
-| 🛡️ **Seguro y Transparente**    | Sin software dudoso ni modificaciones ocultas. VelocityOS te informa de cada acción en su registro de actividad.                       |
+| Característica                      | Descripción                                                                                                                                              |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🚀 **Perfiles Inteligentes y Personalizables** | Elige perfiles como **Competitivo** o **Equilibrado**, y personaliza cada optimización a tu gusto desde la pestaña de Ajustes.                   |
+| ⚙️ **Optimización Profunda del Sistema**       | Ajusta planes de energía, desactiva servicios, limpia archivos temporales y modifica el registro para eliminar cuellos de botella.              |
+| 🧹 **Gestor de Recursos Activo**      | **Cierra aplicaciones en segundo plano** (Discord, Steam, etc.) y **libera memoria RAM** con un solo clic o automáticamente al aplicar un perfil.        |
+| 🌐 **Diagnóstico de Red Avanzado**      | Incluye un **test de velocidad preciso** (potenciado por Ookla®) que prioriza el servidor de tu ISP para un diagnóstico de red fiable.                 |
+| 📊 **Monitoreo Multi-GPU**             | Mantén un ojo en el uso de tu **CPU, RAM y GPU (soporte para NVIDIA y AMD)** con un panel de monitoreo claro y conciso.                                |
+| ⏪ **Totalmente Reversible**          | Cada cambio realizado por los perfiles de optimización se puede revertir con un solo clic, devolviendo tu sistema a su estado original.                 |
+| 🛡️ **Seguro y Transparente**         | Sin software dudoso ni modificaciones ocultas. VelocityOS te informa de cada acción en su registro de actividad y se ejecuta con permisos de admin. |
 
 <div align="center">
   <img src="docs/images/screenshot_monitor.png" alt="Pestaña de Monitor" width="70%"/>
@@ -40,7 +42,7 @@
 
 1.  Dirígete a la página de [**Releases**](https://github.com/LexDevM/VelocityOS/releases) de este repositorio.
 2.  Descarga el último instalador `VelocityOS_vX.X.X_Setup.exe`.
-3.  Ejecuta el instalador. Si lo pide, se requerirán **permisos de administrador**, ya que la aplicación necesita modificar ajustes del sistema para funcionar correctamente.
+3.  Ejecuta el instalador. **Se requerirán permisos de administrador**, ya que la aplicación necesita modificar ajustes del sistema para funcionar correctamente.
 
 > **Nota:** Tu sistema operativo puede mostrar una advertencia de seguridad (Windows SmartScreen) porque la aplicación no está firmada digitalmente. Esto es normal para proyectos independientes. Simplemente haz clic en "Más información" y luego en "Ejecutar de todas formas".
 
@@ -51,7 +53,7 @@
 3.  **Juega:** ¡Disfruta de tu sistema optimizado!
 4.  **Restaura (Opcional):** Cuando termines, haz clic en `Revertir Cambios` para devolver todo a la normalidad.
 5.  **Diagnostica:** Usa la pestaña `Monitor` para revisar el estado de tu hardware y realizar un test de velocidad si experimentas lag.
-6.  **Personaliza:** Ve a la pestaña `Ajustes` para activar o desactivar optimizaciones específicas de cada perfil o para configurar el inicio con Windows.
+6.  **Personaliza:** Ve a la pestaña `Ajustes` para activar o desactivar optimizaciones específicas de cada perfil, como el cierre de apps o la liberación de RAM, y para configurar el inicio con Windows.
 
 <div align="center">
   <img src="docs/images/screenshot_settings.png" alt="Pestaña de Ajustes" width="70%"/>

@@ -4,6 +4,7 @@
     "description": "Un buen equilibrio entre rendimiento y funcionalidad. Mantiene características útiles como la Game Bar para capturas. Ideal para juegos AAA y uso general.",
     "optimizations": {
         "power_plan": true,
+        "ram_optimizer": true,
         "services": {
             "enabled": true,
             "list": [
@@ -18,6 +19,12 @@
         },
         "temp_files": {
             "enabled": true
+        },
+        "app_killer": {
+            "enabled": false,
+            "list": [
+                "EpicGamesLauncher.exe"
+            ]
         }
     }
 }

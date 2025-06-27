@@ -257,3 +257,40 @@ class SystemOptimizer:
                 
         except Exception as e:
             self.log(f"[ERROR] Ocurrió un error inesperado al liberar RAM: {e}")
+    
+    def manage_background_apps(self, profile=None):
+        """
+        Encuentra y termina procesos en segundo plano definidos en el perfil.
+        Esta acción NO es reversible por el programa.
+        """
+        if not profile or not profile.get('enabled', False):
+            self.log("\n[INFO] El cierre de aplicaciones en segundo plano está desactivado en este perfil.")
+            return
+
+        apps_to_kill = profile.get('list', [])
+        if not apps_to_kill:
+            self.log("\n[INFO] No hay aplicaciones definidas para cerrar en este perfil.")
+            return
+
+        self.log("\n[+] Cerrando aplicaciones en segundo plano para liberar recursos...")
+        killed_count = 0
+        
+        # Hacemos la lista de nombres de ejecutables insensible a mayúsculas/minúsculas
+        apps_to_kill_lower = [app.lower() for app in apps_to_kill]
+
+        for proc in psutil.process_iter(['name', 'pid']):
+            try:
+                if proc.info['name'].lower() in apps_to_kill_lower:
+                    process_to_kill = psutil.Process(proc.info['pid'])
+                    process_to_kill.terminate() # Usar terminate() es más seguro que kill()
+                    self.log(f"[OK] Proceso terminado: {proc.info['name']} (PID: {proc.info['pid']})")
+                    killed_count += 1
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                # El proceso ya no existe o no tenemos permisos para cerrarlo (ej. un proceso del sistema)
+                self.log(f"[WARN] No se pudo terminar el proceso {proc.info['name']}. Puede que ya se haya cerrado o esté protegido.")
+                continue
+        
+        if killed_count > 0:
+            self.log(f"[INFO] Se cerraron {killed_count} procesos/aplicaciones.")
+        else:
+            self.log("[INFO] No se encontraron aplicaciones de la lista en ejecución.")

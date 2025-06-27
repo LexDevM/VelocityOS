@@ -26,49 +26,51 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("VelocityOS")
         self.setWindowIcon(QIcon(resource_path("assets/icons/velocityos.ico")))
-        self.setMinimumSize(800, 720)
+        self.setMinimumSize(800, 750)
 
-        # --- Backend Logic Initialization ---
-        app_path = sys.executable if getattr(sys, 'frozen', False) else os.path.abspath(sys.argv[0])
-        self.startup_manager = startup_manager.StartupManager("VelocityOS", app_path)
-        self.state_manager = StateManager()
-        
-        # El widget de la consola DEBE crearse antes de que cualquier módulo de backend lo use
-        self.console_output = QTextEdit() 
-
-        self.reg_manager = RegistryManager(self.log_to_console)
-        self.system_optimizer = SystemOptimizer(self.state_manager, self.log_to_console)
-        self.network_optimizer = NetworkOptimizer(self.state_manager, self.reg_manager, self.log_to_console)
-        self.gpu_optimizer = GpuOptimizer(self.log_to_console)
-
-        # --- GUI State Variables ---
-        self.profiles = self._load_profiles()
+        # --- Variables de estado primero ---
         self.selected_profile_name = None
         self.selected_profile_id_for_settings = None
         self.gpu_brand_detected = "UNKNOWN"
 
-        # --- Main Layout: Tabs ---
+        # --- Crear widgets de UI básicos ---
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
         self.optimization_tab = QWidget()
         self.monitor_tab = QWidget()
         self.settings_tab = QWidget()
+        
+        self.console_output = QTextEdit() 
+
+        # --- Inicialización del Backend ---
+        app_path = sys.executable if getattr(sys, 'frozen', False) else os.path.abspath(sys.argv[0])
+        self.startup_manager = startup_manager.StartupManager("VelocityOS", app_path)
+        self.state_manager = StateManager()
+        self.reg_manager = RegistryManager(self.log_to_console)
+        self.system_optimizer = SystemOptimizer(self.state_manager, self.log_to_console)
+        self.network_optimizer = NetworkOptimizer(self.state_manager, self.reg_manager, self.log_to_console)
+        self.gpu_optimizer = GpuOptimizer(self.log_to_console)
+
+        # --- Cargar datos DESPUÉS de inicializar el backend ---
+        self.profiles = self._load_profiles()
+        
+        # --- Configurar las pestañas AHORA que todos los datos están listos ---
         self.tabs.addTab(self.optimization_tab, QIcon(resource_path("assets/icons/sliders.png")), "Optimización")
         self.tabs.addTab(self.monitor_tab, QIcon(resource_path("assets/icons/monitor.png")), "Monitor")
         self.tabs.addTab(self.settings_tab, QIcon(resource_path("assets/icons/settings.png")), "Ajustes")
         self.tabs.setIconSize(QSize(24, 24))
 
-        # --- Setup Tabs ---
         self.setup_optimization_tab()
         self.setup_monitor_tab()
         self.setup_settings_tab()
         
-        # --- Start Monitoring Thread ---
+        # --- Iniciar hilos al final ---
         self.monitor_thread = SystemMonitor(self)
         self.monitor_thread.system_data_updated.connect(self.update_monitor_data)
+        self.monitor_thread.gpu_detected.connect(self.update_gpu_label)
         self.monitor_thread.start()
         
-        # --- Initial State ---
+        # --- Estado inicial ---
         self.update_button_states()
         self.log_to_console("Bienvenido a VelocityOS.")
         if not self.profiles:
@@ -80,7 +82,7 @@ class MainWindow(QMainWindow):
         main_layout = QVBoxLayout(self.optimization_tab)
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
-
+        
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setFrameShape(QFrame.Shape.NoFrame)
@@ -93,6 +95,7 @@ class MainWindow(QMainWindow):
         profile_layout = QVBoxLayout()
         self.profile_buttons_layout = QHBoxLayout()
         self.profile_buttons = {}
+        
         profile_icons = {"competitive": resource_path("assets/icons/rocket.png"), "balanced": resource_path("assets/icons/shield.png")}
         for profile_id, profile_data in self.profiles.items():
             icon_path = profile_icons.get(profile_id, resource_path("assets/icons/zap.png"))
@@ -102,6 +105,7 @@ class MainWindow(QMainWindow):
             button.clicked.connect(lambda checked, p_id=profile_id: self.select_profile(p_id))
             self.profile_buttons_layout.addWidget(button)
             self.profile_buttons[profile_id] = button
+            
         self.profile_description_label = QLabel("Selecciona un perfil para ver su descripción.")
         self.profile_description_label.setObjectName("DescriptionLabel")
         self.profile_description_label.setWordWrap(True)
@@ -198,7 +202,8 @@ class MainWindow(QMainWindow):
         monitoring_layout.addWidget(QLabel("Uso de RAM:"))
         monitoring_layout.addWidget(self.ram_progress)
         monitoring_layout.addSpacing(10)
-        monitoring_layout.addWidget(QLabel("Uso de GPU (NVIDIA):"))
+        self.gpu_label = QLabel("Uso de GPU:") # Etiqueta dinámica
+        monitoring_layout.addWidget(self.gpu_label)
         monitoring_layout.addWidget(self.gpu_progress)
         monitoring_layout.addSpacing(15)
         self.free_ram_button = QPushButton(QIcon(resource_path("assets/icons/zap.png")), " Liberar Memoria RAM")
@@ -300,7 +305,7 @@ class MainWindow(QMainWindow):
         if not profile_id: return
         self.selected_profile_id_for_settings = profile_id
         profile_opts = self.profiles[profile_id]['optimizations']
-        option_map = {"power_plan": "Cambiar Plan de Energía a Alto Rendimiento", "services": "Desactivar Servicios Innecesarios", "gaming_features": "Desactivar Funciones de Juego de Windows (Game Bar)", "nagle_algorithm": "Aplicar Tweaks de Red (Baja Latencia)", "temp_files": "Limpiar Archivos Temporales"}
+        option_map = {"power_plan": "Cambiar Plan de Energía a Alto Rendimiento", "services": "Desactivar Servicios Innecesarios", "app_killer": "Cerrar Aplicaciones en Segundo Plano", "ram_optimizer": "Optimizar y Liberar Memoria RAM", "gaming_features": "Desactivar Funciones de Juego de Windows (Game Bar)", "nagle_algorithm": "Aplicar Tweaks de Red (Baja Latencia)", "temp_files": "Limpiar Archivos Temporales"}
         for key, text in option_map.items():
             if key in profile_opts:
                 checkbox = QCheckBox(text)
@@ -370,6 +375,16 @@ class MainWindow(QMainWindow):
         self.gpu_progress.setValue(int(data['gpu_usage']))
         self.gpu_progress.setFormat(f"{int(data['gpu_usage'])}% ({data['gpu_temp']}°C)")
 
+    def update_gpu_label(self, brand):
+        if brand == "NVIDIA":
+            self.gpu_label.setText("Uso de GPU (NVIDIA):")
+        elif brand == "AMD":
+            self.gpu_label.setText("Uso de GPU (AMD):")
+        else:
+            self.gpu_label.setText("Uso de GPU (No detectada):")
+            self.gpu_progress.setFormat("N/A")
+            self.gpu_progress.setEnabled(False)
+
     def log_to_console(self, message):
         if hasattr(self, 'console_output') and self.console_output:
             self.console_output.append(message)
@@ -415,6 +430,8 @@ class MainWindow(QMainWindow):
         self.log_to_console(f"=== INICIANDO OPTIMIZACIÓN CON PERFIL: {self.selected_profile_name} ===")
         if opts.get('power_plan', False): self.system_optimizer.optimize_power_plan()
         self.system_optimizer.manage_services('disable', opts.get('services'))
+        self.system_optimizer.manage_background_apps(opts.get('app_killer'))
+        if opts.get('ram_optimizer', False): self.system_optimizer.free_up_ram()
         self.system_optimizer.manage_gaming_features('disable', opts.get('gaming_features'))
         self.network_optimizer.manage_nagle_algorithm('disable', opts.get('nagle_algorithm'))
         self.system_optimizer.clean_temp_files(opts.get('temp_files'))
